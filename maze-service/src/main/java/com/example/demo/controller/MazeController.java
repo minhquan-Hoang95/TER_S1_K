@@ -6,6 +6,9 @@ import com.example.demo.models.components.algorithms.Sidewinder;
 import com.example.demo.models.components.algorithms.TruePrims;
 import com.example.demo.models.components.maze.Cell;
 import com.example.demo.models.components.maze.Grid;
+import com.example.demo.models.entities.MazeEntity;
+import com.example.demo.repository.MazeRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +31,12 @@ import java.util.*;
 @RestController
 @RequestMapping("/api") // Base URL prefix
 public class MazeController {
+
+    private final MazeRepository mazeRepository;
+
+    public MazeController(MazeRepository mazeRepository) {
+        this.mazeRepository = mazeRepository;
+    }
 
     /**
      * Generate a maze based on given parameters.
@@ -70,6 +79,8 @@ public class MazeController {
             }
         }
 
+
+
         // ✅ Serialize maze
         List<List<Map<String, Boolean>>> cells = new ArrayList<>();
         for (int r = 0; r < rows; r++) {
@@ -87,8 +98,15 @@ public class MazeController {
             cells.add(rowList);
         }
 
+        // After generating the maze, save it in MongoDB and return the ID
+        MazeEntity entity = new MazeEntity(grid, algo);
+        // Here you would typically save the entity using a repository, e.g. mazeRepository.save
+        mazeRepository.save(entity);
+
+
         // ✅ Build JSON response
         Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", entity.getId()); // Return the generated maze ID
         response.put("rows", rows);
         response.put("cols", cols);
         response.put("cells", cells);
@@ -97,6 +115,8 @@ public class MazeController {
                 "timestamp", new Date().toString(),
                 "author", "Pacman Project - Groupe K"
         ));
+
+
 
         return ResponseEntity.ok(response);
     }
@@ -113,5 +133,24 @@ public class MazeController {
                 "version", "1.0.0"
 
         ));
+    }
+
+
+    /** Endpoint for system rating
+     * *  Example: GET /api/maze/{id}/rating
+     */
+    public ResponseEntity<?> rateMaze(@RequestParam String id, @RequestParam Integer rating) {
+        if (rating < 0 || rating > 5) return ResponseEntity.badRequest().body("Invalid score");
+
+        return mazeRepository.findById(id)
+            .map(maze -> {
+                maze.setRating(rating);
+                mazeRepository.save(maze);
+                return ResponseEntity.ok(Map.of("id", id, "rating", rating));
+            })
+            .orElse(ResponseEntity.notFound().build());
+
+
+
     }
 }
