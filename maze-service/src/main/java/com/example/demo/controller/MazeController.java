@@ -111,6 +111,7 @@ public class MazeController {
                 "status", "UP",
                 "service", "Maze Generator API",
                 "version", "1.0.0"
+
         ));
     }
 }
