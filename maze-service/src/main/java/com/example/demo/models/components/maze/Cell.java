@@ -57,6 +57,10 @@ public class Cell {
 
     }
 
+    public void unlink(Cell cell) {
+        unlink(cell, true);
+    }
+
     /**
      * Checks if this cell is linked to another cell.
      *

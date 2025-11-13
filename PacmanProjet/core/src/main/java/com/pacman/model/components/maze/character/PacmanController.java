@@ -1,6 +1,6 @@
 package com.pacman.model.components.maze.character;
 
-import com.pacman.model.components.maze.Direction;
+import com.pacman.game.model.Direction;
 import com.pacman.model.components.maze.Grid;
 
 /**

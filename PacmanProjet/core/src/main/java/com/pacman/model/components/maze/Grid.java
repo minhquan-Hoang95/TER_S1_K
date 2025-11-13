@@ -1,6 +1,7 @@
 package com.pacman.model.components.maze;
 
 import com.badlogic.gdx.graphics.Color;
+import com.pacman.game.model.Cell;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -232,12 +233,6 @@ public class Grid {
         }
         return true;
     }
-
-
-
-
-
-
 
 
 

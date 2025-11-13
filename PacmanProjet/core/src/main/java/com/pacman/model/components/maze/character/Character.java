@@ -1,7 +1,7 @@
 package com.pacman.model.components.maze.character;
 
-import com.pacman.model.components.maze.Cell;
-import com.pacman.model.components.maze.Direction;
+import com.pacman.game.model.Cell;
+import com.pacman.game.model.Direction;
 
 public abstract class Character {
     protected final String name;

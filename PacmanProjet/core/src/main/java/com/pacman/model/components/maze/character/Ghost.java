@@ -1,8 +1,7 @@
 package com.pacman.model.components.maze.character;
 
-import com.pacman.model.components.maze.Cell;
-import com.pacman.model.components.maze.Direction;
-import com.pacman.model.components.maze.Grid;
+import com.pacman.game.model.Cell;
+import com.pacman.game.model.Direction;
 import com.pacman.model.components.maze.MazeEnvironment;
 
 public abstract class Ghost extends Character {

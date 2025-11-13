@@ -1,5 +1,7 @@
 package com.pacman.model.components.maze;
 
+import com.pacman.game.model.Cell;
+
 import java.util.ArrayList;
 import java.util.List;
 

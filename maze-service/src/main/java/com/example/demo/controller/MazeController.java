@@ -6,8 +6,10 @@ import com.example.demo.models.components.algorithms.Sidewinder;
 import com.example.demo.models.components.algorithms.TruePrims;
 import com.example.demo.models.components.maze.Cell;
 import com.example.demo.models.components.maze.Grid;
+import com.example.demo.models.components.maze.PacmanMaze;
 import com.example.demo.models.entities.MazeEntity;
 import com.example.demo.repository.MazeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,216 +28,302 @@ import java.util.*;
  *   JSON structure representing the maze grid and walls.
  */
 @RestController
-@RequestMapping("/api") // Base URL prefix
+@RequestMapping("/api/maze") // Base URL prefix
 public class MazeController {
 
-    private final MazeRepository mazeRepository;
+    @Autowired
+    private MazeRepository mazeRepository;
 
-    public MazeController(MazeRepository mazeRepository) {
-        this.mazeRepository = mazeRepository;
-    }
+    private static final Random random = new Random();
+
+    // ==================== ROUTES PRINCIPALES ====================
 
     /**
-     * Generate a maze based on given parameters.
+     * Route par défaut : génère un maze Pac-Man optimisé (31x28)
+     * Utilise Recursive Backtracker par défaut
      *
-     * @param rows  number of rows in the maze
-     * @param cols  number of columns in the maze
-     * @param algo  algorithm to use ("bt" = Binary Tree, "rb" = Recursive Backtracker)
-     * @return      ResponseEntity containing the maze data or an error message
+     * Usage : GET /api/maze/random
      */
-    @GetMapping("/maze")
-    public ResponseEntity<?> getMaze(
-            @RequestParam(defaultValue = "10") int rows,
-            @RequestParam(defaultValue = "10") int cols,
-            @RequestParam(defaultValue = "rb") String algo) {
+    @GetMapping("/random")
+    public ResponseEntity<?> generateRandomMaze() {
+        return generatePacmanMaze("rb", 31, 28);
+    }
 
-        // ✅ Validation
-        if (rows <= 0 || cols <= 0) {
-            Map<String, Object> error = Map.of(
-                    "error", "Invalid parameters",
-                    "message", "rows and cols must be positive integers",
-                    "status", HttpStatus.BAD_REQUEST.value()
-            );
-            return ResponseEntity.badRequest().body(error);
-        }
+    /**
+     * Génère un maze avec un algorithme spécifique (sans adaptation Pac-Man)
+     *
+     * Usage :
+     * - GET /api/maze/generate?rows=21&cols=19&algo=tp
+     * - GET /api/maze/generate?algo=bt
+     *
+     * @param rows nombre de lignes (défaut: 21)
+     * @param cols nombre de colonnes (défaut: 19)
+     * @param algo algorithme: rb, tp, bt, sw (défaut: rb)
+     */
+    @GetMapping("")
+    public ResponseEntity<?> generateMaze(
+        @RequestParam(defaultValue = "21") int rows,
+        @RequestParam(defaultValue = "18") int cols,
+        @RequestParam(defaultValue = "rb") String algo) {
 
-        // ✅ Generate maze
-        Grid grid = new Grid(rows, cols);
-        switch (algo.toLowerCase()) {
-            case "bt" -> BinaryTree.on(grid);
-            case "rb" -> RecursiveBacktracker.on(grid);
-            case "tprims" -> TruePrims.on(grid);
-            case "swinder" -> Sidewinder.on(grid);
-            default -> {
-                Map<String, Object> error = Map.of(
-                        "error", "Unknown algorithm",
-                        "message", "Supported: 'bt', 'rb'",
-                        "status", HttpStatus.BAD_REQUEST.value()
-                );
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        try {
+            Grid maze = new Grid(rows, cols);
+
+            switch (algo.toLowerCase()) {
+                case "rb" -> RecursiveBacktracker.on(maze);
+                case "tp" -> TruePrims.on(maze);
+                case "bt" -> BinaryTree.on(maze);
+                case "sw" -> Sidewinder.on(maze);
+                default -> RecursiveBacktracker.on(maze);
             }
+
+            MazeEntity entity = createMazeEntity(maze, algo);
+            MazeEntity saved = mazeRepository.save(entity);
+
+            return ResponseEntity.ok(toJsonResponse(saved));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(errorResponse("Maze generation failed: " + e.getMessage()));
         }
+    }
+
+    /**
+     * ⭐ ROUTE PRINCIPALE : Génère un VRAI maze Pac-Man
+     *
+     * C'est LA route que tu veux utiliser pour Pac-Man !
+     *
+     * Usage :
+     * - GET /api/maze/pacman-generated
+     * - GET /api/maze/pacman-generated?algo=tp
+     * - GET /api/maze/pacman-generated?rows=31&cols=28&algo=rb
+     *
+     * Résultat : Maze 31x28 avec :
+     * ✅ Symétrie double
+     * ✅ Cycles (imparfait)
+     * ✅ Ghost House centrale
+     * ✅ Tunnels latéraux
+     * ✅ Prêt pour LibGDX
+     */
+    @GetMapping("/pacman-generated")
+    public ResponseEntity<?> generatePacmanMaze(
+        @RequestParam(defaultValue = "rb") String algo,
+        @RequestParam(defaultValue = "31") int rows,
+        @RequestParam(defaultValue = "28") int cols) {
+
+        try {
+            // ÉTAPE 1 : Générer maze parfait
+            Grid baseMaze = new Grid(rows, cols);
 
 
-
-        // ... dans getMaze()
-
-// ✅ Serialize maze / Build cells structure
-        List<List<Map<String, Boolean>>> cells = new ArrayList<>();
-        for (int r = 0; r < rows; r++) {
-            List<Map<String, Boolean>> rowList = new ArrayList<>();
-            for (int c = 0; c < cols; c++) {
-                Cell cell = grid.getCell(r, c);
-                Map<String, Boolean> cellMap = Map.of(
-                    "north", !cell.isLinked(cell.north),
-                    "east",  !cell.isLinked(cell.east),
-                    "south", !cell.isLinked(cell.south),
-                    "west",  !cell.isLinked(cell.west)
-                );
-                rowList.add(cellMap);
+            switch (algo.toLowerCase()) {
+                case "rb" -> RecursiveBacktracker.on(baseMaze);
+                case "tp" -> TruePrims.on(baseMaze);
+                case "bt" -> BinaryTree.on(baseMaze);
+                case "sw" -> Sidewinder.on(baseMaze);
+                default -> RecursiveBacktracker.on(baseMaze);
             }
-            cells.add(rowList);
+
+            baseMaze.braid(1.0); // Braid 100% pour éliminer tous les dead-ends
+
+            // Rendre imparfait avant adaptation
+            //baseMaze.braid(0.5); // Braid 50% pour plus de cycles initiaux
+
+            // ÉTAPE 2 : Adapter pour Pac-Man
+            PacmanMaze adapter = new PacmanMaze(baseMaze);
+            adapter.braidMaze(1.0); // Braid 100% pour éliminer dead-ends après adaptation
+            adapter.applyHorizontalSymmetry();
+            adapter.carveMainRooms();
+            adapter.carveStraightHallways();
+            adapter.carveGhostHouse();
+            adapter.addTunnel();
+            Grid pacmanMaze = adapter.result();
+
+            // ÉTAPE 3 : Créer l'entité pour MongoDB
+            MazeEntity entity = new MazeEntity();
+            entity.setRows(pacmanMaze.getRows());
+            entity.setCols(pacmanMaze.getColumns());
+            entity.setAlgorithm(algo);
+            entity.setCells(serializeCells(pacmanMaze.getGrid()));
+
+            // ✅ VÉRIFICATION AVANT SAUVEGARDE
+            pacmanMaze.printStats();
+
+
+            // ÉTAPE 4 : Sauvegarder
+            MazeEntity saved = mazeRepository.save(entity);
+
+            System.out.println("✅ Pac-Man maze generated: " + saved.getId());
+            System.out.println("   - Dimensions: " + rows + "x" + cols);
+            System.out.println("   - Algorithm: " + algo);
+            System.out.println("   - Properties: Symmetric, Cycles, GhostHouse, Tunnels");
+
+            return ResponseEntity.ok(toJsonResponse(saved));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(errorResponse("Pac-Man maze generation failed: " + e.getMessage()));
         }
-
-// ✅ Créer l'entité pour Mongo
-        MazeEntity entity = new MazeEntity(rows, cols, algo, cells);
-
-// ✅ Sauvegarder
-        mazeRepository.save(entity);
-
-// ✅ Construire la réponse JSON
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", entity.getId());     // 👈 ident renvoyé au client
-        response.put("rows", rows);
-        response.put("cols", cols);
-        response.put("cells", cells);
-        response.put("meta", Map.of(
-            "algorithm", algo,
-            "timestamp", new Date().toString(),
-            "author", "Pacman Project - Groupe K"
-        ));
-
-        return ResponseEntity.ok(response);
-
     }
 
     /**
-     * Simple health check endpoint.
-     * Example: GET /api/health
+     * Récupérer un maze par son ID
+     *
+     * Usage : GET /api/maze/60d5ec4f1234567890abcdef
      */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> healthCheck() {
-        return ResponseEntity.ok(Map.of(
-                "status", "UP",
-                "service", "Maze Generator API",
-                "version", "1.0.0"
-
-        ));
-    }
-    /**
-     * Récupérer la liste de tous les mazes générés (sans les cellules)
-     * Exemple :
-     *  GET /api/maze/all
-     */
-
-    @GetMapping("/maze/all")
-    public ResponseEntity<List<Map<String, Object>>> getAllMazes() {
-        List<MazeEntity> mazes = mazeRepository.findAll();
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (MazeEntity maze : mazes) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("id", maze.getId());
-            m.put("rows", maze.getRows());
-            m.put("cols", maze.getCols());
-            m.put("algorithm", maze.getAlgorithm());
-            m.put("rating", maze.getRating());
-            result.add(m);
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getMazeById(@PathVariable String id) {
+        try {
+            Optional<MazeEntity> maze = mazeRepository.findById(id);
+            if (maze.isPresent()) {
+                return ResponseEntity.ok(toJsonResponse(maze.get()));
+            } else {
+                return ResponseEntity.status(404)
+                    .body(errorResponse("Maze not found with id: " + id));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(errorResponse("Error retrieving maze: " + e.getMessage()));
         }
-
-        return ResponseEntity.ok(result);
     }
+
     /**
-     * Noter un maze : 0 (bad) ... 5 (good)
-     * Exemple :
-     *  PATCH /api/maze/654b3e.../rating?score=4
+     * Récupérer TOUS les mazes
+     *
+     * Usage : GET /api/maze/all
      */
-    @PatchMapping("/maze/{id}/rating")
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllMazes() {
+        try {
+            List<MazeEntity> mazes = mazeRepository.findAll();
+            return ResponseEntity.ok(Map.of(
+                "count", mazes.size(),
+                "mazes", mazes.stream().map(this::toJsonResponse).toList()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(errorResponse("Error retrieving mazes: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Récupérer mazes par algorithme
+     *
+     * Usage : GET /api/maze/by-algorithm?algo=rb
+     */
+    @GetMapping("/by-algorithm")
+    public ResponseEntity<?> getMazesByAlgorithm(@RequestParam String algo) {
+        try {
+            List<MazeEntity> mazes = mazeRepository.findByAlgorithm(algo);
+            return ResponseEntity.ok(Map.of(
+                "algorithm", algo,
+                "count", mazes.size(),
+                "mazes", mazes.stream().map(this::toJsonResponse).toList()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(errorResponse("Error retrieving mazes: " + e.getMessage()));
+        }
+    }
+
+
+    /**
+     * Noter un maze (rating 0-5)
+     *
+     * Usage : POST /api/maze/rate/60d5ec4f1234567890abcdef?rating=4
+     */
+    @PostMapping("/rate/{id}")
     public ResponseEntity<?> rateMaze(
         @PathVariable String id,
-        @RequestParam("score") Integer rating) {
+        @RequestParam int rating) {
 
-        if (rating == null || rating < 0 || rating > 5) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "error", "Invalid rating",
-                "message", "score must be between 0 and 5"
-            ));
+        if (rating < 0 || rating > 5) {
+            return ResponseEntity.status(400)
+                .body(errorResponse("Rating must be between 0 and 5"));
         }
 
-        return mazeRepository.findById(id)
-            .map(maze -> {
+        try {
+            Optional<MazeEntity> mazeOpt = mazeRepository.findById(id);
+            if (mazeOpt.isPresent()) {
+                MazeEntity maze = mazeOpt.get();
                 maze.setRating(rating);
-                mazeRepository.save(maze);
+                MazeEntity updated = mazeRepository.save(maze);
                 return ResponseEntity.ok(Map.of(
+                    "message", "Maze rated successfully",
                     "id", id,
                     "rating", rating
                 ));
-            })
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                Map.of("error", "Maze not found", "id", id)
-            ));
+            } else {
+                return ResponseEntity.status(404)
+                    .body(errorResponse("Maze not found"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(errorResponse("Error rating maze: " + e.getMessage()));
+        }
     }
 
-    /**
-     * GET /api/maze/{id}
-     * Récupère un maze spécifique par son ID
-     */
-    @GetMapping("/maze/{id}")
-    public ResponseEntity<Map<String, Object>> getMazeById(@PathVariable String id) {
-        return mazeRepository.findById(id)
-            .map(this::getMapResponseEntity)
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Maze not found", "id", id)));
-    }
+    // ==================== UTILITAIRES ====================
 
     /**
-     * GET /api/maze/random?minRating=X
-     * Récupère un maze aléatoire avec rating minimum
+     * Convertir Cell[][] en List<List<Map<String, Boolean>>> pour MongoDB
+     *
+     * Conversion :
+     * - true = MUR (pas de lien)
+     * - false = PASSAGE (lien existe)
      */
-    @GetMapping("/maze/random")
-    public ResponseEntity<Map<String, Object>> getRandomMaze(
-        @RequestParam(defaultValue = "0") Integer minRating) {
+    private List<List<Map<String, Boolean>>> serializeCells(Cell[][] cells) {
+        List<List<Map<String, Boolean>>> result = new ArrayList<>();
 
-        List<MazeEntity> candidates = mazeRepository.findByRatingGreaterThanEqual(minRating);
-
-        if (candidates.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                Map.of("error", "No maze found with rating >= " + minRating,
-                    "suggestion", "Generate new mazes or lower minRating")
-            );
+        for (Cell[] row : cells) {
+            List<Map<String, Boolean>> rowList = new ArrayList<>();
+            for (Cell cell : row) {
+                Map<String, Boolean> cellMap = new HashMap<>();
+                cellMap.put("north", cell.north == null || !cell.isLinked(cell.north));
+                cellMap.put("south", cell.south == null || !cell.isLinked(cell.south));
+                cellMap.put("east", cell.east == null || !cell.isLinked(cell.east));
+                cellMap.put("west", cell.west == null || !cell.isLinked(cell.west));
+                rowList.add(cellMap);
+            }
+            result.add(rowList);
         }
 
-        // Choisir un maze aléatoire
-        Random rand = new Random();
-        MazeEntity maze = candidates.get(rand.nextInt(candidates.size()));
-
-        return getMapResponseEntity(maze);
+        return result;
     }
 
-    private ResponseEntity<Map<String, Object>> getMapResponseEntity(MazeEntity maze) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", maze.getId());
-        response.put("rows", maze.getRows());
-        response.put("cols", maze.getCols());
-        response.put("cells", maze.getCells());
-        response.put("algorithm", maze.getAlgorithm());
-        response.put("rating", maze.getRating());
+    /**
+     * Créer une MazeEntity à partir d'un Maze
+     */
+    private MazeEntity createMazeEntity(Grid maze, String algorithm) {
+        MazeEntity entity = new MazeEntity();
+        entity.setRows(maze.getRows());
+        entity.setCols(maze.getColumns());
+        entity.setAlgorithm(algorithm);
+        entity.setCells(serializeCells(maze.getGrid()));
+        return entity;
+    }
 
-        Map<String, String> meta = new LinkedHashMap<>();
-        meta.put("algorithm", maze.getAlgorithm());
-        response.put("meta", meta);
+    /**
+     * Convertir MazeEntity en JSON response
+     */
+    private Map<String, Object> toJsonResponse(MazeEntity entity) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", entity.getId());
+        response.put("rows", entity.getRows());
+        response.put("cols", entity.getCols());
+        response.put("algorithm", entity.getAlgorithm());
+        response.put("rating", entity.getRating());
+        response.put("createdAt", entity.getCreatedAt());
+        response.put("totalCells", entity.getRows() * entity.getCols());
+        response.put("cells", entity.getCells());
+        return response;
+    }
 
-        return ResponseEntity.ok(response);
+    /**
+     * Créer une réponse d'erreur standardisée
+     */
+    private Map<String, String> errorResponse(String message) {
+        return Map.of("error", message, "timestamp", System.currentTimeMillis() + "");
     }
 
 

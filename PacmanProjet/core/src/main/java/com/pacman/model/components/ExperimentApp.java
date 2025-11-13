@@ -1,7 +1,7 @@
 package com.pacman.model.components;
 
 import com.pacman.model.components.algorithms.*;
-import com.pacman.model.components.maze.Cell;
+import com.pacman.game.model.Cell;
 import com.pacman.model.components.maze.Grid;
 
 public class ExperimentApp {
