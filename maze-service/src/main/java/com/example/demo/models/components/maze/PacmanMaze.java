@@ -24,7 +24,7 @@ public class PacmanMaze {
        // makeVerticallySymmetric();  // ÉTAPE 1 : Symétrie
         braidMaze(1.0);            // ÉTAPE 2 : 15% cycles (PAS 100% !)
        addGhostHouse48();// ÉTAPE 3 : Ghost House
-        //addTunnels1();               // ÉTAPE 4 : Tunnels
+        addTunnels1();               // ÉTAPE 4 : Tunnels
         //grid.recomputeNeighbors();
         System.out.println("✅ Adaptation terminée");
         return grid;
@@ -64,7 +64,7 @@ public class PacmanMaze {
      * Tunnels permettent Pacman et les fantômes de traverser les murs extérieurs
      * Pour Pac-Man classique: des tunnels aux lignes du milieu
      */
-    private void addTunnels1() {
+    public void addTunnels1() {
         System.out.println("🚇 Creating tunnels...");
 
         int rows = grid.getRows();      // 31
@@ -265,7 +265,7 @@ public class PacmanMaze {
      * ÉTAPE 3 : Ghost House 4×8 - SYMMETRIC DOORS
      * Pour maze 31×28, créer zone 4 rows × 8 cols centrée
      */
-    private void addGhostHouse48() {
+    public void addGhostHouse48() {
         System.out.println("👻 Creating Ghost House 4×8 (SYMMETRIC)...");
 
         int rows = grid.getRows();      // 31
@@ -980,7 +980,7 @@ public class PacmanMaze {
     /**
      * ÉTAPE 2 : Braiding
      */
-    private void braidMaze(double probability) {
+    void braidMaze(double probability) {
         List<Cell> deadEnds = new ArrayList<>(grid.deadEnds());
         Collections.shuffle(deadEnds, random);
 

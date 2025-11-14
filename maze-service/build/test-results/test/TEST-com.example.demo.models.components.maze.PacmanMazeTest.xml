@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.demo.models.components.maze.PacmanMazeTest" tests="5" skipped="0" failures="2" errors="0" timestamp="2025-11-14T13:58:38.284Z" hostname="deadman" time="0.044">
+  <properties/>
+  <testcase name="braidMazeShouldReduceDeadEnds()" classname="com.example.demo.models.components.maze.PacmanMazeTest" time="0.021">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;true&gt; but was: &lt;false&gt;
+	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+	at app//com.example.demo.models.components.maze.PacmanMazeTest.braidMazeShouldReduceDeadEnds(PacmanMazeTest.java:70)
+	at java.base@21.0.8/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base@21.0.8/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base@21.0.8/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="addTunnelsShouldCreateHorizontalConnections()" classname="com.example.demo.models.components.maze.PacmanMazeTest" time="0.008">
+    <failure message="org.opentest4j.AssertionFailedError: expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: expected: &lt;true&gt; but was: &lt;false&gt;
+	at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at app//org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at app//org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:31)
+	at app//org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:183)
+	at app//com.example.demo.models.components.maze.PacmanMazeTest.addTunnelsShouldCreateHorizontalConnections(PacmanMazeTest.java:30)
+	at java.base@21.0.8/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base@21.0.8/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base@21.0.8/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="applyHorizontalSymmetryShouldMirrorMazeCorrectly()" classname="com.example.demo.models.components.maze.PacmanMazeTest" time="0.005"/>
+  <testcase name="addGhostHouseShouldCreateIsolatedAreaWithDoors()" classname="com.example.demo.models.components.maze.PacmanMazeTest" time="0.003"/>
+  <testcase name="adaptShouldApplyAllTransformations()" classname="com.example.demo.models.components.maze.PacmanMazeTest" time="0.003"/>
+  <system-out><![CDATA[]]>&#x1f687;<![CDATA[ Creating tunnels...
+   Tunnel row: 15
+   ✅ LEFT tunnel: [15,0] ↔ [15,1]
+   ✅ RIGHT tunnel: [15,27] ↔ [15,26]
+]]>&#x1f687;<![CDATA[ Tunnels complete!
+
+31 28 14
+]]>&#x1f47b;<![CDATA[ Creating Ghost House 4×8 (SYMMETRIC)...
+   Maze: 31×28
+   Centre: [15,14]
+   Ghost House: rows[13-16], cols[10-17]
+   Size: 4×8
+   ✅ Interior: OPEN (32 cells)
+   ✅ LEFT door: [16,10] ↔ [17,10]
+   ✅ RIGHT door: [16,17] ↔ [17,17]
+]]>&#x1f47b;<![CDATA[ Ghost House 4×8 complete!
+
+]]>&#x1f3ae;<![CDATA[ Adaptation vers Pac-Man Maze...
+31 28 14
+]]>&#x1f47b;<![CDATA[ Creating Ghost House 4×8 (SYMMETRIC)...
+   Maze: 31×28
+   Centre: [15,14]
+   Ghost House: rows[13-16], cols[10-17]
+   Size: 4×8
+   ✅ Interior: OPEN (32 cells)
+   ✅ LEFT door: [16,10] ↔ [17,10]
+   ✅ RIGHT door: [16,17] ↔ [17,17]
+]]>&#x1f47b;<![CDATA[ Ghost House 4×8 complete!
+
+]]>&#x1f687;<![CDATA[ Creating tunnels...
+   Tunnel row: 15
+   ✅ LEFT tunnel: [15,0] ↔ [15,1]
+   ✅ RIGHT tunnel: [15,27] ↔ [15,26]
+]]>&#x1f687;<![CDATA[ Tunnels complete!
+
+✅ Adaptation terminée
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
