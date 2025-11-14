@@ -1,0 +1,27 @@
+name: Gradle Multi-module CI   # Nom du workflow affiché sur GitHub Actions
+
+on:
+  push:
+    branches: [ main ]         # Déclenche sur les pushs vers main
+  pull_request:
+    branches: [ main ]         # Déclenche sur les pull requests vers main
+
+jobs:
+  build:                       # Début du job principal appelé "build"
+    runs-on: ubuntu-latest     # Machine virtuelle Ubuntu (hébergée par GitHub)
+
+    steps:                     # Étapes du job
+      - name: Checkout code
+        uses: actions/checkout@v4    # Récupérer le code du repository
+
+      - name: Set up JDK 21       # Installer Java 21 (nécessaire pour le build)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'      # Numéro de version Java à installer
+          distribution: 'temurin' # Distribution (Temurin = AdoptOpenJDK)
+
+      - name: Grant execute permissions for gradlew
+        run: chmod +x gradlew     # Rendre le script gradlew exécutable (sous Linux)
+
+      - name: Build all modules and run tests
+        run: ./gradlew build      # Compiler TOUS les modules + exécuter TOUS les tests
